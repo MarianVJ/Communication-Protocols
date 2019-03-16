@@ -1,0 +1,246 @@
+							Tema 2 Protocoale de Comunicatie
+									Jorascu Marian Vladut 325CD
+				-Sistem monetar de tip Internet Banking-
+									
+									
+Makefile-ul are reguli de build si clean (conform cerintei).
+Optional am mai adaugat o regula de "clean_logs", pentru a
+sterge fisierele de log ale clientilor.
+
+	Pentru inceput as vrea sa explic modul de folosire al codurilor de eroare.
+In cazul in care utilizatorul doreste sa efectueze o anumita operatie care 
+necesita sa fie logat , dar el nu este , clientul va afisa la stdout
+codul de eroare -1 cu mesajul corespunzator , dar fara a avea inaintea 
+mesajului "IBANK> " , Am ales aceasta afisare deoarece asa am dedus eu ca trebuie
+facut, analizand exemplele din enuntul temei (exceptie exemplul de la login).
+Dar cu alte cuvinte acest lucru are sens deoarece mesajul de eroare nu vine de la
+serverul de IBANK ci de la client. De asemenea si in cazul in care o anumita functie
+genereaza eroare, tot acest mod de afisare il voi folosi (atat in server cat si
+in client). 
+	Am pornit realizarea temei de la scheletul de cod de la laboratul 8 , cel de 
+multiplexare tcp.Am folosit apelul select doar in cadrul serverului. 
+	Pentru a verifica comenzile introduse de la tastatura de un utilizator , 
+am folosit functiile strcmp si strncmp . In cazul comenzilor de tip
+"login" , "listsold" , Am folosit strncmp , astfel am comparat primele
+n caractere. Astfel, comenzi precum "loginn" se vor asimila tot cu login.
+In cazul in care informatiile tin de securitatea contului, si de date
+secrete, nu am mai permis aceasta "libertate" datele trebuind sa fie 
+identice . Astfel in cazul introducerii unui pin acesta trebuie sa aiba exact
+4 caractere, iar de asemenea la comanda unlock parola secreta , se va
+compara folosind "strcmp". In implementarea functiilor am urmat exact pasii
+din cerinta , iar acolo unde nu era precizat am impementat cum am crezut ca ar
+fi mai potrivit pentru o astfel de aplicatie, iar aceste alegeri le voi preciza
+in cele ce urmeaza in README.
+	Pentru a construi mesajele pentru client am folosit functii precum strcat
+strcpy, strncat, si pentru a converti din double in string cu 2 zecimale
+am folosit sprintf ( toate aceste creeri de mesaje se puteau realiza cu sprintf
+dar mi-am adus aminte de ea , tocmai la final , in functia transfer :-( )
+
+	Pentru a retine informatiile din fisierul de log mi-am definit o structura
+in care retin toate informatiile din acel fisier ( nume prenume ..) , de asmenea
+am mai adaugat 3 campuri suplimentare , care indica daca pe acel cont
+exista deja cineva logat , daca acel cont a fost blocat (cont_status are valoarea
+2 daca contul este blocat ). In implementare am considerat ca nu pot fi logati
+pe serverul meu bancar mai mult de 100 de clienti simultan , astfel Mi-am definit
+3 vectori care retin pentru fiecare client ( numar de socket care este
+echivalentul unui client, exceptie socketul de udp care este folosit de oricine ,
+dar acela este folosit pentru a debloca anumite conturi). Astfel am un vector care retine
+pentru fiecare client , cate incercari esuate consecutiv pana in prezent a avut pentru un
+anumit cont , indicele contului este salvat in vectorul cl_fail_cont , iar vectorul
+contor este 'cl_fails'. Iar odata ce un client a reusit sa se logheze , pe un cont
+indicele contului (conturile sunt de aseemenea reprezentat sub forma unui vector
+ale carui elemente sunt de tipul structurii definite de mine , si este indexat de la 1) .
+
+
+
+---->SERVER
+	In server , la inceput intializez cu 0 , toti vectorii auxiliari, pe care
+i-am enumerat mai sus, dupa care citesc din fisierul primit ca argument , 
+in vectorul meu de structuri , informatiile aferente pentru toti clientii. 
+Dupa care initializam multimea de descriptori de citire si cea temporara.
+Apoi deschid socketul tcp al serverului sockfd, introduc informatiile necesare
+adresei serverului , fac bind , iar apoi setez cate conexiuni pot fi maxim in 
+asteptare. Adaugam in multimea de descriptori acest socket TCP, de asemenea
+adaugam si socketul 0, care reprezinta socketul cu ajutorul caruia "ascult" ce 
+se citeste de la tastatura.
+	Dupa aceste operatii, deschid socketul udp "sock_udp", introduc informatiile 
+neesare adresei serverului , fac bind, iar apoi introduc in multimea de read,
+si acest socket udp.
+	Odata realizate aceste operatii , pot ascultat atat conexiuni
+pe socketii tcp , cat si pe socketul de udp , pe portul primit ca argument. 
+Comunicarea cu clinetii se va realiza astfel : pentru fiecare client in parte
+(unic pid / client) , va exista un socket tcp unic , pe care se va realiza comunicarea
+, iar in cazul in care ei vor sa trimita o comanda de unlock, se va folosi pentru
+toti clinetii acelasi socket tcp. Toata actiunea se petrece in cadrul unei bucle
+while astfel : La fiecare pas , verific pe care din cei maxim fdmax socketi ( nu vor
+fi niciodata fdmax ) am primit un mesaj. 
+	Pentru inceput , verifica daca socketul i este 0 , cu alte cuvinte daca s-a introdus
+un mesaj de la tastatura , in cadrul serverului , daca mesajul este "quit", atunci 
+acesta este semnalul ca severul se va inchide, anunt toti clientii de acest
+eveniment ( le trimit prin socketul de tcp corespunzator , mesajul "quit"), 
+daca se introduce orice alta comanda , aceasta va fi ignorata. 
+ 
+COMANDA "unlock"
+-->Daca i  are valoarea sock_udp , atunci s-a primit un mesaj pe socketul udp, 
+acest mesaj poate fi de doua feluri , fie comanda de "unlock numar_card", aceasta
+fiind doar prima etapa, daca s-a primit aceasta comanda , parsez datele
+pentru a afla daca numar_card-ul , dupa care iterez prin multimea conturilor
+si verific daca cardul este valid (flag1 == 1-> card valid). 
+Dupa care conform cerintei pot exista mai multe cazuri , daca numarul de card este
+inexistent, cardul pe care doresc sa il deblochez sa nu fie blocat ( acest
+lucru reprezinta o operatie esuata ), si daca nici unul din cele doua evenimente
+nu se petrece inseamna ,ca este nevoie de deblocarea cardului , asadar clientului
+care a introdus aceasta comanda, i se trimite un mesaj prin care este rugat sa
+introduca parola secreta a utilizatorului , care are lungime variabila.
+	Cel de-al format al mesajului ce poate veni pe socketul udp , este raspunsul
+la aceasta cerere de introducere a parolei , care este sub forma "numar_card parola_secreta"
+Cand se intra pe acesata ramura, mai intai sunt parsate datele pentru a lua 
+parola si contul, In cazul acesta numar_card -ul se verifica sa aibe exact 6 caractere,
+si de asemenea vom folosi pentru a testa corectitudinea parolei secrete strcmp 
+intrucat ea are dimensiune variabila.Daca parola introdusa coincide ,atunci operatia 
+s-a efectuat cu succes , iar cardul este deblocat , altfel se trimite mesaj 
+clientului , anuntandu-l ca a esuat deblocarea.
+
+
+-->Cel de-al treilea caz este cand i are valoarea sockfd, ceea ce inseamna ca
+exista o noua conexiune de la un client al serverului , pe care il vom
+introduce in multimea noastra read_fds , se va actualiza si fd_max daca este cazul.
+
+-->Altfel daca nu se intra pe niciuna din cele 3 ramuri de mai sus , inseamna ca am primit
+un mesaj de la unul din clineti , pe socket tcp , care semnifica de fapt o operatie.
+
+	Pentru a verifica ce operatie se doreste a fi efectuata , testez primele x caractere
+din mesaj , unde x este lungimea numelui comenzii. Astfel se permit erori
+de genul loginn in loc de login etc.
+
+COMANDA "login" 
+	Cand se primeste aceasta comanda , pentru inceput se parseaza datele , numar_cont
+si pin-ul , si se verifica daca contul este valid(flag1 == 1) si 
+pinu-ul este cel corect(flag2 == 1). Dupa ce am setat sau nu aceste flaguri, ele se
+verifica in ordinea sugerata in enunt si pe forumul temei . Pentru inceput verific daca
+numar cardul este invalid ( nu exista ), altfel  testez daca cineva este logat deja pe acel
+cont, altfel verific daca el este blocat , apoi daca pinul este incorect, Si daca nu
+se intra pe niciuna din aceste ramuri , insemna ca logarea a avut succes ,si se trimite
+un mesaj de "bun venit" utilizatorului, In toate celelalte cazuri se va trimite un mesaj 
+format dintr-un cod de eroare , si un mesaj sugestiv. In cazul in care pinul este introdus
+gresit, actualizez contorul specific clinetului curent ,si testez daca au fost introduse
+de 3 ori la rand de la acest client pentru contul curent 3 pinuri gresite, caz in care 
+blochez contul.Asa se realizeaza blocarea in cadrul temei mele deoarece asa am dedus eu
+din enunt si de pe forum : sa se introduca de 3 ori la rand pin-uri gresit pentru acelasi
+numar_card , de pe acelasi client.
+
+COMANDA "logout"
+	Pentru comanda logout si alte comenzi care necesita logare nu verific daca 
+aceasta exista, deoarece aceasta logare se face deja in client-ul de IBANK.
+Cand se intra pe aceasta ramura, actualizez informatia din contul respectiv
+, pentru ca alte persoane care doresc sa se logheze sa o poata face, si ii transmit
+un mesaj clientului.
+
+COMANDA "listsold"
+	Cand se intra pe ramura de "listsold" i se trimite un mesaj cu suma pe care
+o are in contul cu care este logat clientul , suma va fi afisata cu 2 zecimale.
+
+COMANDA "transfer"
+	Am presupus ca suma maxima ce se doreste a fi transferata , nu depaseste 12 cifre
+(partea intreaga a sumei).Cand se intra pe aceasta ramura, la fel ca si in cazul unlock
+mesajul poate avea doua semnificatii, cea de comanda initiala de transfer <numar_card> <suma>
+, iar cea de doua semnificatie este in cazul in care comanda este valida, clientul
+este rugat inca o data sa confirme operatia bancara.Cand se intra pe prima ramura
+parsez datele , si verific daca numar_card se afla in baza de date, si daca suma
+ce doreste a fi transferata nu depaseste suma totala care se afla in contul cu care
+este logat clientul. Astfel pot exista urmatoarele cazuri : numarul de card catre
+care se face transferul este inexistent, banii din cont nu ii sunt suficienti
+pentru tranzactia dorita, sau totul este in regula , operatia se poate efectua
+iar serverul trimite catre client un mesaj prin care este rugat sa confirme
+operatia cu [y/n]. Cand soseste raspunsul de la confirmare , Se verifica
+doar prima litera din mesaj daca aceasta este "y" , atunci se considera 
+valida confirmarea , altfel operatia este anulata. In ambele cazuri se trimite
+un mesaj clientului cu rezultatul final.(+ cod de eroare in caz de refuz ).
+
+COMANDA "quit" primida din client
+	Cand se primeste aceasta comanda de la client , stim ca el isi va intrerupe conexiunea
+si totodata , nici nu va mai fi logat pe cont ( in cazul in care aceasta logare exista).
+Astfel , eliberam campul clientSocket din contul pe care era logat ( in cazul in care
+era logat), altfel daca nu era logat se va modifica compul din 
+contul , al carui indice este 0 in vector ( acest este un cont "dummy" ).De asemenea
+se inchide socketul tcp pe care s-a realizat comunicarea si se scoate si din multimea 
+read_fds.
+
+COMANDA "quit" primita din server
+Atunci cand filedescriptorul este 0 , inseamna ca s-a introdus ceva de la tastatura
+din command-proptul serverului, orice comanda in afara de "quit" este ignorata.Daca
+coamnda introdusa este quit, atunci  pentru inceput se cinhdie socketul udp, apoi
+se trimite cate un mesaj cu quit catre toti clinetii activi, apoi se inchdie si socketul
+udp, si se termina programul.
+
+
+--->CLIENT
+In cadrul clinetului , 	deschid socket-ul de de tcp pe care voi trimite comenzile la 
+serverul de IBANK , introduc informatiile necesare adresei serverului (port si ip ) , informatii
+care sunt primite ca argumente , la rularea executabilului, dupa care apelez functia coonnect
+pentru a conecta clientul la server ( tcp). Apoi, deschid socket-ul de udp pe care eventual voi 
+trimite comanda de unlock catre server, si introduc informatiile necesare adresei serverului
+(ceste informatii sunt aceleasi ca la tcp. Apoi toat actiune se petrece in cadrul
+unei bucle whille, in care la fiecare pas se asteapta citirea de la tastatura a unei 
+comenzi, si in functie de aceasta comanda se intra pe o ramura specifica comenzii
+tastatte. SI in acest caz tastez doar primele litere care ar putea face "match" pe
+numele comenzii .Pentru fiecare comanda citita de la tastatura elimin caracterul '\n'.
+Daca se va face testarea , iar comenzile clinetului vor fi introduse cu "<fisier"
+ele vor trebui fi separate cu "\n" ( eu cand am testat functionalitatea introduceam
+de mana si , de aceea are acest comportament ).
+
+COMANDA "login" 
+Daca clientul este deja logat pe un cont , nu se mai trimite niciun mesaj serverului
+si se afiseaza la stdout un mesaj de eroare, altfel , daca clientul nu este logat
+voi parsa mai intai datele , pentru a retine intr-o variabila adresa ( deoarece
+mereu trebuie salvata ultima adresa din comanda login , pentru o eventuala
+apelare a functiei unlock). Apoi trimite mesajul catre server, si astept raspunsul
+in cazul in care raspunsul este unul afirmativ , "Welcome...", variabila flag_login
+devine 1 , astfel pe tot parcursul programului voi avea informatia ca acest client
+eeste logat deja( Pana acesta nu va apela functia logout).
+
+COMANDA "logout"
+In cazul in care clientul nu este logat, afisez un mesaj de eroare ( cu codul
+aferent), altfel trimit comanda la server si astept raspunsul acestuia ( pe care
+il afisez la stdout).
+
+COMANDA "listsold"
+In cazul in care clientul nu este logat, afisez un mesaj de eroare , altfel trimit
+comanda la server si astept raspunsul ( pe care il afisez la stdout).
+
+COMANDA "trasfer"
+In cazul in care clinetul nu este logat , afisez un meaj de eroare , altfel
+trimit comanda la server si astept primul raspuns , acest poate fi 
+unul negativ , prin care se semnaleaza diferite nlucruri ( nr card invalid ,
+operatie esuata ,) ,iar singurul mesaj care necesita "un raspuns imediat"
+este cel de validare a transferului pe care tocmai am vrut sa il efectuam
+Daca mesajul incepe cu "IBANK> Tranfer" , atunci citesc de la tastatura
+raspunsul de confirmare a clinetului si il trimit apoi la server , astept
+rezultatul (confirmarii sau infirmarii) si afisez la stdout.
+
+COMANDA "quit" din client
+Trimit comanda la server pentru a-l anunta ca imi voi incheia activitate, inchid
+cei 2 socketi (tcp si udP) si fisierul in care sunt scrise toate comenzile
+care sunt afisate si la stdou ( fisierul de log), dupa care parasesc bucla
+principala , si programul se incheie.
+
+COMANDA "quit" din Server
+Modul in care am gandit aceasta comanda este unul ineficient.Cand am realizat tema
+nu am luat in calcul si aceasta comanda de quit din server , si am realizat clientul
+in modul prezentat anterior. Pentru o mai buna functionare a acestei comenzi de quit 
+puteam utiliza un apel de select si in client , astfel nu trebuie sa mai astept
+ca un apel oarecare de recv din program sa fie 0 , sau
+sa citesc "quit". Astfel am folosit indicatia oferita
+pe forum "functia de citire de pe socket va inatoarce 0 (echivalent cu end of connection)
+.In acest caz puteti afisa la termina un mesa "Conexiune inchisa de server".".
+Si va multumesc pentru intelegere.Astfel cand un apel de recv intoarce 0
+sau mesajul primit de la Serverul IBANK este "quit", atunci
+voi parasi bucla mea principala , inchid socketii de tcp si udp si filedescriptorul 
+de log si programul se incheie ( inainte afisez la stdout un mesaj corespunzator).
+
+PS: In fisierul de log sunt toate comenzile si toate "printurile" din momentul in
+care clinetul incepe sa introduca comenzi ( tot ce se afiseaza in bucla while).
+
+
+
+

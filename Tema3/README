@@ -1,0 +1,75 @@
+								README 
+						Tema 3 Protocoale de Comunicatie 
+								Client DNS
+								Jorascu Marian Vladut 325CD
+							
+
+Inainte de a incepe descrie modul in care am implementat aceasta tema
+Precizez faptul ca am atasat la arhiva si un fisier de dns.log in care
+am dat cateva comenzi . De asmenea de fiecare data cand este data o comanda
+Outputul este scris la finalul fisierului de log(dns.log) , nu se suprascrie nimic.
+De asmenea fisierul message.log in care s-a scris mesajul primit de la serverul
+DNS are 16 octeti pe linie , si sunt scrisi in acelasi format
+in care sunt afisati si in utilitarul WireShark.
+
+Pentru inceput voi descrie functiile auxiliare implementate de mine
+
+--Functia toType primeste un sir de caractere ce reprezint un tip  si returneaza 
+numarul intreg corespunzator.
+
+--Functia fromType primeste numarul intreg si retunreaza sirul de caractere
+corespunzator acelui tip.
+
+--Functia fromClass primeste un numar intreg si returneaza un sir de caractere
+ce reprezinta clasa respectiva conform cu specificatiile RFC 1035 ( ex 1 - IN)
+
+--Functia CitesteAdres(FILE *f) primeste un fisier si returneaza primul
+ip din acel fisier , si ignora comentariile ( De preferat sa fie in 
+aceste fisier doar ip-uri si comentarii)
+
+--Functia verificaPointer(int pozz) aceasta functia primeste un intreg 
+iar aceasta returneaza sirul de caractere din bufferul global buffer 
+care se gaseste la aceasta pozitia. De asmenea aceasta functie trateaza
+si cazul in care la acea pozitie se afla un pointer , sau daca pe parcurs ce 
+se citesc caractere se intalneste un pointer si se "sare" la acea pozitie.Conditia
+ca sa fie pointer este ca valoarea de la poz respectiva sa fie mai mare ca 192 
+Pointerul este pe doi octeti, il converti din BIF in LITTLE , dupa care 
+pt shiftam de 2 ori la stanga si de 2 ori la dreapta si determinam pozitia 
+din sirul mare , la care se refera acel pointer.
+
+
+--Functia afiseazaSectiune(int nrSectiune) Aceasta functie primeste un nr
+care reprezinta cate sectiuni DE ANSWER/AUTHORITY/ADDITIONAL si 
+afiseaza sectiune cu sectiune . Pentru inceput ia textul cu functia descrisa
+mai sus , de la inceputul sectiunii curente ( fie ea de orice tip) , dupa care
+in continuarea sirului se va afla answerul cu cele 4 campuri obligatorii (
+type , class , ttl , rdlegt) . Si in functie de tipul answerului curent
+Parsam partea ce urmeaza de dupa answer si anume acel "rdata" variabil , al
+carui dimensiune este retina in interrgul rdlength.
+
+FUNCTIA main: Pentru inceput verificam daca tipul comenzii date este cumva
+"PTR" daca da atunci primul argument (adresa) este de fapt o adresa ip nu 
+un nume de host , asa ca trebuie sa o transformam corespunzator . Din 1.2.3.4
+va deveni 4.3.2.1.in-addr.arpa conform cerintei . Dupa care 
+acest nume  (fie el nume de host sau adresa de arpa) , este transormat
+in QNAME (numarul de caractere , urmat de caracterele respective).
+
+Completam campurile pt header  si question. 
+Compunem mesajul ce va fi transmis catre server in aceasta ordine : 
+header  + qname  + question ( de asmenea qname trebuie sa fie urmat de null
+terminator chiar si in mesaj).
+
+Apoi  citim rand pe rand adrese fisierul dns_servers.conf , cat timp
+nu primim un raspuns de la unul din servere , ca urmare a cererii transmise.
+Cand primim un raspuns in cele 5 secunde , atunci parasim bucla.
+
+Afisam apoi mesajul primit in format hexa in fisierul numit "message.log".
+(Acest fisier contine mereu ultima comanda valida trimisa).
+
+Apoi afisam fiecare RR din mesaj ( pt answer , authority si additional) cu ajutorul
+functiei AfiseazaSectiune, aceassta afisare este de fapt o scriere in fisierul
+"dns.log" , si se va executa conform cerintei , si la finalul fisierului).
+
+Va multumesc pentru prelungirea acordata . A fost binevenita >:D< .
+
+ 

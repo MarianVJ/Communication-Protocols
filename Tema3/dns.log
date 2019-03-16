@@ -1,0 +1,135 @@
+
+; 141.85.128.1 - yahoo.com SOA
+;; ANSWER SECTION:
+yahoo.com.	309	IN	SOA	ns1.yahoo.com. hostmaster.yahoo-inc.com. 2018052214 3600 300 1814400 600
+
+;; AUTHORITY SECTION:
+yahoo.com.	114971	IN	NS	ns3.yahoo.com.
+yahoo.com.	114971	IN	NS	ns2.yahoo.com.
+yahoo.com.	114971	IN	NS	ns5.yahoo.com.
+yahoo.com.	114971	IN	NS	ns1.yahoo.com.
+yahoo.com.	114971	IN	NS	ns4.yahoo.com.
+
+;; ADDITIONAL SECTION:
+ns1.yahoo.com.	329039	IN	A	6818013116
+ns2.yahoo.com.	329039	IN	A	6814225516
+ns3.yahoo.com.	341039	IN	A	2038422153
+ns4.yahoo.com.	318034	IN	A	9813811157
+ns5.yahoo.com.	318034	IN	A	11916025383
+
+
+; 141.85.128.1 - yahoo.com SOA
+;; ANSWER SECTION:
+yahoo.com.	282	IN	SOA	ns1.yahoo.com. hostmaster.yahoo-inc.com. 2018052214 3600 300 1814400 600
+
+;; AUTHORITY SECTION:
+yahoo.com.	114944	IN	NS	ns4.yahoo.com.
+yahoo.com.	114944	IN	NS	ns3.yahoo.com.
+yahoo.com.	114944	IN	NS	ns5.yahoo.com.
+yahoo.com.	114944	IN	NS	ns2.yahoo.com.
+yahoo.com.	114944	IN	NS	ns1.yahoo.com.
+
+;; ADDITIONAL SECTION:
+ns1.yahoo.com.	329012	IN	A	6818013116
+ns2.yahoo.com.	329012	IN	A	6814225516
+ns3.yahoo.com.	341012	IN	A	2038422153
+ns4.yahoo.com.	318007	IN	A	9813811157
+ns5.yahoo.com.	318007	IN	A	11916025383
+
+
+; 141.85.128.1 - yahoo.com MX
+;; ANSWER SECTION:
+yahoo.com.	937	IN	MX	1	mta6.am0.yahoodns.net.
+yahoo.com.	937	IN	MX	1	mta5.am0.yahoodns.net.
+yahoo.com.	937	IN	MX	1	mta7.am0.yahoodns.net.
+
+;; AUTHORITY SECTION:
+yahoo.com.	114926	IN	NS	ns2.yahoo.com.
+yahoo.com.	114926	IN	NS	ns1.yahoo.com.
+yahoo.com.	114926	IN	NS	ns5.yahoo.com.
+yahoo.com.	114926	IN	NS	ns4.yahoo.com.
+yahoo.com.	114926	IN	NS	ns3.yahoo.com.
+
+;; ADDITIONAL SECTION:
+mta5.am0.yahoodns.net.	54	IN	A	6621885139
+mta5.am0.yahoodns.net.	54	IN	A	6719522958
+mta5.am0.yahoodns.net.	54	IN	A	6719522959
+mta5.am0.yahoodns.net.	54	IN	A	74613763
+mta5.am0.yahoodns.net.	54	IN	A	9813715925
+mta5.am0.yahoodns.net.	54	IN	A	9813715926
+mta5.am0.yahoodns.net.	54	IN	A	9813715927
+mta5.am0.yahoodns.net.	54	IN	A	9813715928
+mta7.am0.yahoodns.net.	54	IN	A	9813715925
+mta7.am0.yahoodns.net.	54	IN	A	9813715928
+mta7.am0.yahoodns.net.	54	IN	A	662188552
+mta7.am0.yahoodns.net.	54	IN	A	6621885139
+mta7.am0.yahoodns.net.	54	IN	A	74613763
+mta7.am0.yahoodns.net.	54	IN	A	74613764
+mta7.am0.yahoodns.net.	54	IN	A	98136101117
+mta7.am0.yahoodns.net.	54	IN	A	9813610255
+
+
+; 141.85.128.1 - yahoo.com A
+;; ANSWER SECTION:
+yahoo.com.	768	IN	A	98138219232
+yahoo.com.	768	IN	A	7230359
+yahoo.com.	768	IN	A	72303510
+yahoo.com.	768	IN	A	98138219231
+yahoo.com.	768	IN	A	981372467
+yahoo.com.	768	IN	A	981372468
+
+;; AUTHORITY SECTION:
+yahoo.com.	114914	IN	NS	ns2.yahoo.com.
+yahoo.com.	114914	IN	NS	ns3.yahoo.com.
+yahoo.com.	114914	IN	NS	ns1.yahoo.com.
+yahoo.com.	114914	IN	NS	ns5.yahoo.com.
+yahoo.com.	114914	IN	NS	ns4.yahoo.com.
+
+;; ADDITIONAL SECTION:
+ns1.yahoo.com.	328982	IN	A	6818013116
+ns2.yahoo.com.	328982	IN	A	6814225516
+ns3.yahoo.com.	340982	IN	A	2038422153
+ns4.yahoo.com.	317977	IN	A	9813811157
+ns5.yahoo.com.	317977	IN	A	11916025383
+
+
+; 141.85.128.1 - google.com MX
+;; ANSWER SECTION:
+google.com.	600	IN	MX	50	alt4.aspmx.l.google.com.
+google.com.	600	IN	MX	10	aspmx.l.google.com.
+google.com.	600	IN	MX	40	alt3.aspmx.l.google.com.
+google.com.	600	IN	MX	30	alt2.aspmx.l.google.com.
+google.com.	600	IN	MX	20	alt1.aspmx.l.google.com.
+
+;; AUTHORITY SECTION:
+google.com.	114326	IN	NS	ns1.google.com.
+google.com.	114326	IN	NS	ns4.google.com.
+google.com.	114326	IN	NS	ns3.google.com.
+google.com.	114326	IN	NS	ns2.google.com.
+
+;; ADDITIONAL SECTION:
+alt2.aspmx.l.google.com.	293	IN	A	7412520027
+aspmx.l.google.com.	198	IN	A	741257126
+alt3.aspmx.l.google.com.	293	IN	A	7412520427
+alt4.aspmx.l.google.com.	293	IN	A	7412519727
+alt1.aspmx.l.google.com.	293	IN	A	1081771427
+ns1.google.com.	125034	IN	A	2162393210
+ns2.google.com.	125034	IN	A	2162393410
+
+
+; 141.85.128.1 - google.com CNAME
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+google.com.	60	IN	SOA	ns1.google.com. dns-admin.google.com. 197616398 900 900 1800 60
+
+;; ADDITIONAL SECTION:
+
+
+; 141.85.128.1 - google.com CNAME
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+google.com.	60	IN	SOA	ns1.google.com. dns-admin.google.com. 197568302 900 900 1800 60
+
+;; ADDITIONAL SECTION:

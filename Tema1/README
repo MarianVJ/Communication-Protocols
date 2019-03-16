@@ -1,0 +1,130 @@
+						Tema1-Protocoale de Comonicatii
+									Jorascu Marian Vladut 325CD
+									
+									
+									
+
+  In cadrul acestei teme am implementat protocolul KERMIT in format redus pentru 
+transfer de fisiere folosind coduri CRC pt detectia erorilor ( am folosit
+o functie deja implementat in C) iar pentru simularea caii de comunicatie
+am folosit aplicatia link_emulator utilizata si in cadrul laboratoarelor.
+  In prima partea a README-ului voi descrie functiie ajutatoare , dupa care
+voi prezenta modul de functionare al sender-ului si al recever-ului.
+
+-->void initializeSendInitData(init_frame *ip) 
+Aceasta functie are rolul de a initializa o structura de tipul init_frame definita
+de mine , structura ce reprezinta zona de DATA din pachetele de tip Send-Init.
+Am setat toti parametrii la valorile din cerinta.
+
+-->void createPacket(msg* t,char * seq , char type,unsigned char lend,char * data)
+Aceasta functie primeste ca argumente 
+     t -  pachetul ce trebuie construit  si urmeaza
+sa fie trimis. 
+ 	 seq - numarul de secventa global al pachetului curent
+ 	 type - este tipul pachetului 
+ 	 lend - lungimea sirului de trimits
+ 	 data  - pointer catre sirul de caractere ce urmeaza sa fie trimis
+Folosind structura frame definita de mine functia initializeaza header-ul
+pachetului. Pachetele sunt de doua tipuri cele care au zona de date vida
+precum pachetele de NACK( si altele) sau care au zona de date cu informatii
+folositoare ( daca campul de data este NULL atunci si zona de data nu trebuie
+initializata). Odata ce sunt copiate si data si headerul , functia calculeaza
+crc-ul si il actualizeaza si in pachet  , iar la finalul pachetului se pune 
+pe pozitia corespunzatoare MARK ( ce indica sfarsitul fisierului).
+
+-->void initializeFirstFrame(frame* ft, char * seq)
+-->void initializeSendInitPacket(msg* t,  char * seq)
+	Aceste doua functii au fost creeate pentru acelasi scop : de a creea
+pachetul de tip Send-Init din Sender . 
+
+-->char sendPacket(msg *t)
+  t - mesajul ce urmeaza sa se trimita , acest mesaj a fost deja creeat in afara
+functiei el doar trebuie trimis si receptionat de catre receiver dupa cum urmeaza:
+
+Aceassta functie este in Sender si are rolul de a trimite pachete si de a receptiona
+raspunsul de la receiver si functioneaza astfel : Pentru inceput se trimite mesajul 
+primit ca argument , dupa care se asteapta timp de timeout secunde raspunsul. Daca 
+in timpul alocat nu am primit niciun raspuns , vom considera ca pachetul a fost 
+pierdut si vom retrimite mesajul . Daca vom trimite de 3 ori consecutiv un mesaj
+fara a primi niciun raspuns  ( fie el ACK sau Nack) vom parasia functia
+si vom semnala in main acest fapt, functia returnand valoarea 0.Daca am primit un
+mesaj in acest timeout stabilit de noi avem doua posibilitati de a fi un mesaj
+de tipul ACK sau NACK ( in caz de NACK retrimitem mesajul  si practic contorul
+nostru care ne semnaleaza daca am trimis de 3 ori un mesaj si nu am primit
+raspuns se reseteaza ) , in caz de ACK parasim functia , care returneaza
+valoarea 1 ( SUCCES).De asemenea ACK-ul este acceptat ca fiind ACK doar
+daca este pentru pachetul pe care tocmai l-am trimis (cu nr de secventa 
+de la pasul curent)
+
+MENTIONEZ FAPTUL ca nu am verificat daca mesajul de ACK/NACK este corupt 
+(folosind campul de crc de la finalul mesajului care a fost setat desigur)
+deoarecce in enuntul temei se specifica faptul ca mesajele  se pot corupe 
+intr-un singur sens de la SENDER la RECEIVER datorita canalului de transmisie
+oferit pentru realizarea temei.
+
+
+-->msg* receiveMessage(char *	seq1)
+Aceasta functie intoarce mesajul receptionat corect de la sender
+sau NULL in cazul in care au fost 3 incercari nereusite de a receptiona
+un mesaj( pentru ca in main sa se intrerupa activitatea receiver-ului).
+Singurul argument este numarul de secventa al ultimului pachet care a fost
+receptionat corect. Dupa cum am precizat este aceeasi politica cu asteptarea
+primirii mesajului in numar de 3 ori , acesta functie este pentru primirea
+oricarui tip de pachete in afara celor de tip SEnd-Init , astfel conform cerintei
+daca nu am primit mesaj ( s-a depasit timeout-ul) vom retrimite ultimul pachet
+trimis ( care poate fi fie NACK la pacchetul cu nr secv curent , 
+fie ACK la pachetul anterior primit).
+In cazul in care am receptionat un mesaj , calculam crc-ul si verificam daca
+crc-ul calculat de noi este acelasi cu cel de pe pozitia corespunzatoare din pachet
+. Daca cele doua valori sunt egale asta inseamna ca pachetul nu a fost corupt si
+este considerat ca fiind primit corect . Daca insa mesajul nu a fost corupt
+dar numarul este numarul de secventa asteptat , nu il vom lua in calcul.
+si vom retrimite NACK cu numarul de secventa curent asteptat.
+
+
+--> msg* receiveInitMessage(char *	seq1)
+Aceasta functie are un comportament in proportie de 70% identic cu functia 
+prezentata anterior , scopul acestia este de a receptiona primul mesaj de 
+tip SEND_INIT. Am ales sa fac o functie separata pentru acest pachet , deoarece
+altfel ar fi trebuit sa verifica de fiecare data in functia anteriorara daca
+pachetul de primit este de tip s-init, aceste verificari facandu-se pentru 
+toate pachetele primite ( s-ar fi executat operatii fara rost). Comportamentul
+diferit al acestia fata de cel al "surorii" sale vine din faptul ca , in 
+cazul in care se depaseste limita de timeout secunde , nu va fi transmis
+niciun mesaj catre sender ( de ACK sau NACK) ca in cazul celorlalte tipuri
+de pachete). De asmenea, daca mesajul a fost receptionat fara a se
+produce coruperi pe canalul de comunicatie , verificam daca parametrii 
+de comunicatie ai emitatorului corespund cu parametrii sai , daca
+da trimite un ACK , semn ca totul este in regula si transmisia poate incepe
+daca nu trimite un NACK semn ca ceva nu este in regula.
+
+
+MODUL DE FUNCTIONARE AL EMITATORULUI
+	Logica este urmatoarea : trimit pentru inceput pachetul de SEND_INIT,
+dupa care parcurg lista fisierelor ce trebuie transmise (ce eeste 
+primita ca parametru). Pentru fiecare fisier in parte
+se trimite : Pachetul de File HEADER cu numele fisierului, apoi se citesc
+date din fisier (maxim MAXL date) si se trimit receptorului. Dupa ce amtermiant
+de citit datele trimit un pachet de tipul EOF pentru ca receptul sa cunoasca 
+ca am terminat de transmis fisierul curent. Desigur dupa trimiterea
+fiecarui pachet verific daca aceasta a esuat( 3 transmiteri consecutive
+fara a primi niciun raspuns in cele timeout secunde) si inchid activitatea
+emitatorului. Dupa ce am trimit toate fisierele , mai exista un singur pachet
+de transmis cel de tip EOT care indica sfarsitul comunicatiei dintre cele 
+doua entitati.
+
+MODUL DE FUNCTIONARE AL RECEPTORULUI
+	Logica este urmatoarea:Pentru inceput va trebui receptiona mesajul de 
+Send-init care este primul . Dupa care , intr-un while primesc pachet cu 
+pachet , si in functia de tipul pachetului execut diferite actiuni. Daca
+primesc un pachet de tipul File_header , creez un fisier cu numele primit
+in zona de DATA a acelui pachet si in fata adaug prefixul de recv_ .
+Daca mesajul este de tip Date atunci scriu mesajul primit in fisierul deschis
+anterior , daca primesc EOF atunci inchid fisierul. Aceasta bucla se paraseste
+atunci cand se va primi pachetul de tip EOT prin care receptorul este anuntat
+ca au fost transmise toate fisierele. De asmenea de fiecare data
+se incearca receptionarea mesajului , daca functia desccrisa anterior , intoarce
+NULL atunci receiverul isi incheie activitatea si anunta la stdout ca 
+ca a incercat de 3 ori consecutiv sa primeasca mesajul timp de timeout
+secunde , fara niciun raspuns.
+
